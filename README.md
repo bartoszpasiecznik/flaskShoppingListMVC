@@ -1,2 +1,2 @@
 # flaskShoppingListMVC
-Shopping List MVC made in Flask
+Shopping List MVC made in Flask using MySQL Database
