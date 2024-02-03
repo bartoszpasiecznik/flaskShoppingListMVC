@@ -1,6 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from app import app
 from config import mysql
+import pymysql
+from pymysql import cursors
 
 @app.route('/init_db')
 def init_db():
@@ -84,7 +86,6 @@ def bought(id_data):
     """, id_data)
     bought = cur.fetchone()  # nazwy z index.html
     cur.close()
-    print(bought[0])
 
     if bought[0] == 0:
         cur = mysql.connection.cursor()
@@ -106,6 +107,148 @@ def bought(id_data):
         mysql.connection.commit()
 
     return redirect(url_for('Index'))
+
+
+@app.route('/api/additem', methods=['POST'])
+def add_item():
+    try:
+        _json = request.json
+        _itemName = _json['itemName']
+        _quantity = _json['quantity']
+
+        if _itemName and _quantity and request.method == 'POST':
+            cur = mysql.connection.cursor()
+            query = "INSERT INTO shoppingList (itemName, quantity, bought) VALUES (%s, %s, %s)"
+            queryData = (_itemName, _quantity, False)
+            cur.execute(query,queryData)
+            mysql.connection.commit()
+            response = jsonify("Shopping Item added successfully")
+            response.status_code = 200
+            cur.close()
+            return response
+        else:
+            return showMessage()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/item')
+def show_items():
+    try:
+        cur = mysql.connect.cursor()
+        cur.execute("SELECT id, itemName, quantity, bought FROM shoppingList")
+        itemList = cur.fetchall()
+        response = jsonify(itemList)
+        response.status_code = 200
+        cur.close()
+        return response
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/item/<string:item_id>')
+def show_select_item(item_id):
+    try:
+        cur = mysql.connect.cursor()
+        cur.execute("SELECT id, itemName, quantity, bought FROM shoppingList WHERE ID =%s", item_id)
+        itemList = cur.fetchone()
+        response = jsonify(itemList)
+        response.status_code = 200
+        cur.close()
+        return response
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/update', methods=['PUT'])
+def update_item():
+    try:
+        _json = request.json
+        _id_data = _json['id']
+        _itemName = _json['itemName']
+        _quantity = _json['quantity']
+
+        if _itemName and _quantity and _id_data and request.method == 'PUT':
+            cur = mysql.connection.cursor()
+            query = """
+                UPDATE shoppingList
+                SET itemName=%s, quantity=%s
+                WHERE id=%s
+            """
+            queryData = (_itemName, _quantity, _id_data)
+            cur.execute(query,queryData)
+            mysql.connection.commit()
+            response = jsonify("Shopping Item updated successfully")
+            response.status_code = 200
+            cur.close()
+            return response
+        else:
+            return showMessage()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/buyitem/<string:item_id>', methods=['PUT'])
+def change_item_bought_status(item_id):
+    try:
+        _json = request.json
+        _bought_data = _json['bought']
+
+        if request.method == 'PUT':
+            cur = mysql.connection.cursor()
+            query = """
+                UPDATE shoppingList
+                SET bought=%s
+                WHERE id=%s
+            """
+            queryData = (_bought_data, item_id)
+            cur.execute(query,queryData)
+            mysql.connection.commit()
+            if _bought_data:
+                response = jsonify("Shopping Item bought successfully")
+            else:
+                response = jsonify("Shopping Item set to not bought successfully")
+            response.status_code = 200
+            cur.close()
+            return response
+        else:
+            return showMessage()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/delete/<string:item_id>', methods=['DELETE'])
+def delete_item(item_id):
+    try:
+
+        if request.method == 'DELETE':
+            cur = mysql.connection.cursor()
+            query = """
+                DELETE FROM shoppingList
+                WHERE id =%s
+            """
+            queryData = (item_id)
+            cur.execute(query,queryData)
+            mysql.connection.commit()
+            response = jsonify("Shopping Item deleted successfully")
+            response.status_code = 200
+            cur.close()
+            return response
+        else:
+            return showMessage()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.errorhandler(404)
+def showMessage(error=None):
+    message = {
+        'status': 404,
+        'message': 'Record not found: ' + request.url,
+    }
+    respone = jsonify(message)
+    respone.status_code = 404
+    return respone
 
 
 if __name__ == "__main__":
