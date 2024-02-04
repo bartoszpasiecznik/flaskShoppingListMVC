@@ -3,8 +3,7 @@
 
     <title>Flask Shopping List MVC</title>
     <link href="{{url_for('static', filename='css/bootstrap.min.css')}}" rel="stylesheet">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
 
 </head>
 
@@ -43,7 +42,7 @@
                 {%endif%}
             {%endwith%}
 
-            <table class="table table-striped", id="shoppingListTable">
+            <table class="table table-striped">
                 <tr>
                     <th>Item name</th>
                     <th>Quantity</th>
@@ -57,9 +56,9 @@
                         <td {% if row.3 == 1 %}style="text-decoration: line-through"{% endif %}>{{row.2}}</td>
                         <td> <input type="checkbox" {% if row.3 == 1 %}checked{% endif %} disabled> </td>
                         <td>
-                            <a id="boughtButton{{row.0}}" class="btn btn-success btn-xs" >Change Item Status</a>
-                            <a href="/update/{{row.0}}" id="updateButton{{row.0}}" class="btn btn-warning btn-xs" data-toggle="modal" data-target="#modalEdit{{row.0}}">Edit</a>
-                            <a href="/delete/{{row.0}}" id="deleteButton{{row.0}}" class="btn btn-danger btn-xs" onclick="return confirm('Are you sure to delete?')">Delete</a>
+                            <a href="/bought/{{row.0}}" class="btn btn-success btn-xs" >Change Item Status</a>
+                            <a href="/update/{{row.0}}" class="btn btn-warning btn-xs" data-toggle="modal" data-target="#modalEdit{{row.0}}">Edit</a>
+                            <a href="/delete/{{row.0}}" class="btn btn-danger btn-xs" onclick="return confirm('Are you sure to delete?')">Delete</a>
                         </td>
                     </tr>
 <!-- EditData -->
@@ -74,7 +73,7 @@
                              </div>
 
                              <div class="modal-body">
-                                <form action="{{url_for('update')}}" method="POST", id="editData">
+                                <form action="{{url_for('update')}}" method="POST">
 
                                    <div class="form-group">
                                       <label>Item Name:</label>
@@ -88,7 +87,7 @@
                                    </div>
 
                                    <div class="form-group">
-                                      <button class="btn btn-primary" type="submit">Update</button>
+                                      <button class="btn btn-primary" type="sbumit">Update</button>
                                    </div>
                                 </form>
                              </div>
@@ -119,16 +118,16 @@
 
          <div class="modal-body">
 
-            <form id="addData">
+            <form action="{{url_for('insert')}}" method="POST">
 
                <div class="form-group">
                   <label>Item Name:</label>
-                  <input type="text" class="form-control" id="itemName" name="itemName" required="1">
+                  <input type="text" class="form-control" name="itemName" required="1">
                </div>
 
                 <div class="form-group">
                   <label>Quantity:</label>
-                  <input type="text" class="form-control" id="quantity" name="quantity" required="1">
+                  <input type="text" class="form-control" name="quantity" required="1">
                </div>
 
                <div class="form-group">

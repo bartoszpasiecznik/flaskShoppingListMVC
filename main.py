@@ -39,18 +39,12 @@ def insert():
         flash("Data Inserted Successfully")
         itemName = request.form['itemName']  # nazwy z index.html
         quantity = request.form['quantity']
+
         cur = mysql.connection.cursor()
         cur.execute("INSERT INTO shoppingList (itemName, quantity, bought) VALUES (%s, %s, %s)",
                     (itemName, quantity, False))
-
-        cur.execute("SELECT id FROM shoppingList ORDER BY id DESC LIMIT 1")
-        item_id = cur.fetchone()
-
-        cur.execute("SELECT bought FROM shoppingList ORDER BY id DESC LIMIT 1")
-        is_bought = cur.fetchone()
         mysql.connection.commit()
-        cur.close()
-        return jsonify({'id':item_id ,'itemName' : itemName, 'quantity': quantity, 'bought': is_bought})
+        return redirect(url_for('Index'))
 
 
 @app.route('/update', methods=['POST', 'GET'])
@@ -59,7 +53,7 @@ def update():
         id_data = request.form['id']
         itemName = request.form['itemName']  # nazwy z index.html
         quantity = request.form['quantity']
-
+        id_data = str(id_data)
         cur = mysql.connection.cursor()
         cur.execute("""
             UPDATE shoppingList
@@ -72,47 +66,47 @@ def update():
         return redirect(url_for('Index'))
 
 
-@app.route('/delete/<string:id_data>', methods=['POST', 'GET'])
+@app.route('/delete/<int:id_data>', methods=['POST', 'GET'])
 def delete(id_data):
     flash("Data Deleted Successfully")
 
     cur = mysql.connection.cursor()
-    cur.execute("DELETE FROM shoppingList WHERE id = %s", (id_data))
+    cur.execute("DELETE FROM shoppingList WHERE id = {}".format(id_data))
     mysql.connection.commit()
     return redirect(url_for('Index'))
 
 
-@app.route('/bought/<string:id_data>')
+@app.route('/bought/<int:id_data>', methods=['POST', 'GET'])
 def bought(id_data):
     cur = mysql.connection.cursor()
     cur.execute("""
                     SELECT bought
                     FROM shoppingList
-                    WHERE id=%s
-    """, id_data)
-    isbought = cur.fetchone()  # nazwy z index.html
+                    WHERE id={}
+    """.format(id_data))
+    bought = cur.fetchone()  # nazwy z index.html
     cur.close()
 
-    if isbought[0] == 0:
+    if bought[0] == 0:
         cur = mysql.connection.cursor()
         cur.execute("""
             UPDATE shoppingList
-            SET bought=%s
-            WHERE id=%s
-        """, (1, id_data))
+            SET bought={}
+            WHERE id={}
+        """.format(1, id_data))
         mysql.connection.commit()
     else:
         cur = mysql.connection.cursor()
         cur.execute("""
                         UPDATE shoppingList
-                        SET bought=%s
-                        WHERE id=%s
-                    """, (0, id_data))
+                        SET bought={}
+                        WHERE id={}
+                    """.format(0, id_data))
 
         flash("Item Status Changed")
         mysql.connection.commit()
 
-    return str(isbought[0])
+    return redirect(url_for('Index'))
 
 
 @app.route('/api/additem', methods=['POST'])
